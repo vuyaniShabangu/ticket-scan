@@ -1,8 +1,8 @@
 import React, { Component } from 'react'
 import QrReader from 'react-qr-reader'
 import axios from 'axios'
-import { resolveNaptr } from 'dns';
- 
+import ScanResultModal from '../ScanResultModal/ScanResultModal'
+
 class QRScanner extends Component {
 
     constructor (props){
@@ -14,33 +14,42 @@ class QRScanner extends Component {
       }
       
   state = {
-    result: ''
+    result: '',
+    modalShow: false,
+    acceptedTicket: false,
+    ticket_id: ''
   }
  
   handleScan = data => {
-      data = "https://tenflagsthemepark.co.za/tickets/?ticket_id=adb551273fb6320000";
-      //alert(data)
+    //data = "https://tenflagsthemepark.co.za/tickets/?ticket_id=adb551273fb6320000removenow";
 
     if (data) {
         if(this.isValidQR(data)){
             let code = this.stripTicketID(data);
             let record;
+            let self = this;
             axios.get('https://vome-77efd.firebaseio.com/'+code+'.json')
                 .then(function (response) {
-                    alert("bam")
-                    record = "meta";      
+                    record = response.data;
+                    self.setState({
+                        result: record ? "Duplicate Scan" : "Successful Scan",
+                        acceptedTicket: record ? false : true,
+                        modalShow: true,
+                        ticket_id: code
+                    });   
                 })
                 .catch(function (error) {
+                    
+                    alert("Error");
+                    console.log(error);
                     record = "teta";
                 });
-                alert(record);
-            this.setState({
-                result: record == null ? "Successful Scan" : "Duplicate Scan"
-            });
+            
             this.postRecord(code);
             //alert("hang on...");
         }
         else{
+            alert("Error: and invalid QR code was provided.");
             this.setState({
                 result: "Invalid Ticket Provided."
             });
@@ -65,6 +74,7 @@ class QRScanner extends Component {
   }
 
   stripTicketID = qrCode => {
+    
     let ticketID = qrCode.replace("https://tenflagsthemepark.co.za?ticket_id=", "");
     ticketID = ticketID.replace("&action=mt-verify","");
     return ticketID;
@@ -75,7 +85,6 @@ class QRScanner extends Component {
     let toReturn;
     axios.get('https://vome-77efd.firebaseio.com/'+ticketID+'.json')
     .then(function (response) {
-        alert("bam")
         console.log(response.data);
         toReturn = response.data;        
     })
@@ -88,21 +97,31 @@ class QRScanner extends Component {
   }
 
   postRecord = ticketID => {
-    axios.post('https://vome-77efd.firebaseio.com/'+ticketID+'.json',
+    axios.put('https://vome-77efd.firebaseio.com/'+ticketID+'.json',
          { "scanned":true });
     
   }
 
   render() {
+    
+    let modalClose = () => this.setState({ modalShow: false });
+
     return (
       <div>
-        <QrReader
+        {<QrReader
           delay={300}
           onError={this.handleError}
           onScan={this.handleScan}
           style={{ width: '100%' }}
-        />
+        />}
+        {/*<button onClick={this.handleScan} >Scan</button>*/}
         <p>{this.state.result}</p>
+        <ScanResultModal
+          show={this.state.modalShow}
+          onHide={modalClose}
+          acceptedticket={this.state.acceptedTicket ? 1 : 0}
+          ticket_id={this.state.ticket_id}
+        />
       </div>
     )
   }

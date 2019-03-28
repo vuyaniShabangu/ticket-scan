@@ -8,7 +8,6 @@ class App extends Component {
     return (
       <div className="App">
         <img src={logo} alt=""/>
-        <h1>Ticket Scanner</h1>
         <QRScanner />
       </div>
     );
