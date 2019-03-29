@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import QrReader from 'react-qr-reader'
 import axios from 'axios'
 import ScanResultModal from '../ScanResultModal/ScanResultModal'
+import Spinner from '../Spinner/Spinner'
 
 class QRScanner extends Component {
 
@@ -17,7 +18,8 @@ class QRScanner extends Component {
     result: '',
     modalShow: false,
     acceptedTicket: false,
-    ticket_id: ''
+    ticket_id: '',
+    showScanner: true
   }
  
   handleScan = data => {
@@ -25,6 +27,7 @@ class QRScanner extends Component {
 
     if (data) {
         if(this.isValidQR(data)){
+            this.setState({showScanner: false});
             let code = this.stripTicketID(data);
             let record;
             let self = this;
@@ -104,18 +107,21 @@ class QRScanner extends Component {
 
   render() {
     
-    let modalClose = () => this.setState({ modalShow: false });
+    let modalClose = () => this.setState({ modalShow: false, showScanner: true });
 
     return (
       <div>
-        {<QrReader
-          delay={300}
-          onError={this.handleError}
-          onScan={this.handleScan}
-          style={{ width: '100%' }}
-        />}
-        {/*<button onClick={this.handleScan} >Scan</button>*/}
-        <p>{this.state.result}</p>
+        {this.state.showScanner ? 
+            <QrReader
+            delay={300}
+            onError={this.handleError}
+            onScan={this.handleScan}
+            style={{ width: '100%' }}
+            /> : 
+            <Spinner /> 
+        }
+        {/*<button onClick={this.handleScan} >Scan</button>
+        <p>{this.state.result}</p>*/}
         <ScanResultModal
           show={this.state.modalShow}
           onHide={modalClose}

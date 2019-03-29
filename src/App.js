@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import logo from './DXtickets.png';
+import logo from './dx.jpg';
 import './App.css';
 import QRScanner from './Components/QRScanner/QRScanner'
 
